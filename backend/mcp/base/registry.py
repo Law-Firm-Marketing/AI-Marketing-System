@@ -20,7 +20,7 @@ class MCPToolRegistry:
         try:
             result = self._tools[name].execute(payload)
             self.logger.info('mcp.tool.executed', extra={'tool': name})
-            return result
+            return {'tool': name, 'status': 'success', 'data': result}
         except Exception as exc:
             self.logger.exception('mcp.execution.failed', extra={'tool': name})
             raise RuntimeError(f'MCP tool execution failed: {name}') from exc

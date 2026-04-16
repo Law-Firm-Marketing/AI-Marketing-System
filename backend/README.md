@@ -1,12 +1,16 @@
 # AI Marketing Orchestration System
 
-## Highlights
-- Strict layered architecture: Agents -> Orchestrator -> MCP Servers -> Integrations.
-- Stateless JSON-based agent interface with strict Pydantic schema validation (`extra=forbid`, strict mode).
-- Central orchestrator with sequential execution, retry handling, and structured logs persisted in PostgreSQL.
-- Workflow + task + log + result persistence in PostgreSQL.
-- Redis + Celery for asynchronous workflow execution.
-- FastAPI endpoints: `/workflow/run`, `/workflow/status/{id}`, `/workflow/logs`.
+## Production-grade execution engine capabilities
+- Persistent workflow state machine stored in PostgreSQL (`workflow_instance`, `workflow_step_execution`, `event_log`).
+- DAG-based execution with dependency-aware ready-step resolution and parallel step execution when dependencies are satisfied.
+- Restartable orchestration with retry handling and failed-workflow recovery.
+- Strict layered architecture: Agents -> Orchestrator -> MCP Service/Registry -> Integrations.
+- Strict Pydantic validation (`strict=True`, `extra=forbid`) for workflow and agent contracts.
+- Full observability via event emission: workflow lifecycle, step lifecycle, agent execution, MCP calls.
+- FastAPI endpoints:
+  - `POST /workflow/run`
+  - `GET /workflow/{id}`
+  - `GET /workflow/{id}/trace`
 
 ## Run locally
 ```bash
@@ -17,5 +21,5 @@ docker compose up --build
 ```bash
 curl -X POST http://localhost:8000/workflow/run \
   -H 'Content-Type: application/json' \
-  -d '{"workflow_name":"keyword_pipeline","input_data":{"topic":"ai marketing"}}'
+  -d '{"workflow_name":"seo_pipeline","input_data":{"topic":"ai marketing"}}'
 ```

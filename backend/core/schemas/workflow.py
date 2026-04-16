@@ -24,25 +24,43 @@ class WorkflowRunRequest(StrictSchemaModel):
 
 
 class WorkflowRunResponse(StrictSchemaModel):
-    workflow_id: int
+    workflow_id: str
     status: str
 
 
-class WorkflowStatusResponse(StrictSchemaModel):
-    id: int
-    name: str
+class WorkflowStepResponse(StrictSchemaModel):
+    id: str
+    step_name: str
     status: str
-    input_data: dict[str, Any]
-    output_data: dict[str, Any]
+    input_payload: dict[str, Any]
+    output_payload: dict[str, Any]
+    error_message: str | None
+    retry_count: int
+    started_at: datetime | None
+    completed_at: datetime | None
+
+
+class WorkflowInstanceResponse(StrictSchemaModel):
+    id: str
+    workflow_name: str
+    status: str
+    current_step_id: str | None
+    context_json: dict[str, Any]
+    retry_count: int
     created_at: datetime
     updated_at: datetime
+    steps: list[WorkflowStepResponse] = Field(default_factory=list)
 
 
-class LogResponse(StrictSchemaModel):
-    id: int
-    workflow_id: int
-    task_id: int | None
-    component: str
+class WorkflowTraceEventResponse(StrictSchemaModel):
+    event_id: str
+    workflow_instance_id: str
+    step_id: str | None
     event_type: str
     payload: dict[str, Any]
-    created_at: datetime
+    timestamp: datetime
+
+
+class WorkflowTraceResponse(StrictSchemaModel):
+    workflow: WorkflowInstanceResponse
+    events: list[WorkflowTraceEventResponse]

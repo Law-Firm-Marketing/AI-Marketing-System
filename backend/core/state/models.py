@@ -1,58 +1,46 @@
+import uuid
 from datetime import datetime
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from core.state.database import Base
 
 
-class WorkflowRun(Base):
-    __tablename__ = 'workflows'
+class WorkflowInstance(Base):
+    __tablename__ = 'workflow_instance'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    workflow_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default='pending', index=True)
-    input_data: Mapped[dict] = mapped_column(JSON, default=dict)
-    output_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    current_step_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    context_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    tasks = relationship('TaskRun', back_populates='workflow', cascade='all, delete-orphan')
 
+class WorkflowStepExecution(Base):
+    __tablename__ = 'workflow_step_execution'
 
-class TaskRun(Base):
-    __tablename__ = 'tasks'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    workflow_id: Mapped[int] = mapped_column(ForeignKey('workflows.id', ondelete='CASCADE'))
-    step_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    workflow_instance_id: Mapped[str] = mapped_column(ForeignKey('workflow_instance.id', ondelete='CASCADE'), index=True)
+    step_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     status: Mapped[str] = mapped_column(String(50), default='pending', index=True)
-    input_data: Mapped[dict] = mapped_column(JSON, default=dict)
-    output_data: Mapped[dict] = mapped_column(JSON, default=dict)
+    input_payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    output_payload: Mapped[dict] = mapped_column(JSON, default=dict)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-
-    workflow = relationship('WorkflowRun', back_populates='tasks')
 
 
-class AgentLog(Base):
-    __tablename__ = 'agent_logs'
+class EventLog(Base):
+    __tablename__ = 'event_log'
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    workflow_id: Mapped[int] = mapped_column(ForeignKey('workflows.id', ondelete='CASCADE'))
-    task_id: Mapped[int | None] = mapped_column(ForeignKey('tasks.id', ondelete='SET NULL'), nullable=True)
-    component: Mapped[str] = mapped_column(String(100), index=True)
+    event_id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    workflow_instance_id: Mapped[str] = mapped_column(ForeignKey('workflow_instance.id', ondelete='CASCADE'), index=True)
+    step_id: Mapped[str | None] = mapped_column(ForeignKey('workflow_step_execution.id', ondelete='SET NULL'), nullable=True, index=True)
     event_type: Mapped[str] = mapped_column(String(100), index=True)
     payload: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
-
-
-class ResultRecord(Base):
-    __tablename__ = 'results'
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    workflow_id: Mapped[int] = mapped_column(ForeignKey('workflows.id', ondelete='CASCADE'))
-    key: Mapped[str] = mapped_column(String(255), nullable=False)
-    value: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)

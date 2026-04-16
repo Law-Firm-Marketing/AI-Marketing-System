@@ -1,12 +1,21 @@
-KEYWORD_PIPELINE = [
-    'keyword_intelligence_agent',
-    'content_strategy_agent',
-    'seo_content_production_agent',
-    'on_page_optimization_agent',
-    'quality_assurance_agent',
-    'wordpress.publish_post',
-]
-
 WORKFLOWS = {
-    'keyword_pipeline': KEYWORD_PIPELINE,
+    'seo_pipeline': {
+        'name': 'seo_pipeline',
+        'steps': [
+            {'name': 'keyword_agent', 'depends_on': []},
+            {'name': 'content_strategy_agent', 'depends_on': ['keyword_agent']},
+            {'name': 'seo_content_agent', 'depends_on': ['content_strategy_agent']},
+            {'name': 'wordpress_publish_mcp', 'depends_on': ['seo_content_agent']},
+            {'name': 'social_agent', 'depends_on': ['wordpress_publish_mcp']},
+        ],
+    },
+    'keyword_pipeline': {
+        'name': 'keyword_pipeline',
+        'steps': [
+            {'name': 'keyword_agent', 'depends_on': []},
+            {'name': 'content_strategy_agent', 'depends_on': ['keyword_agent']},
+            {'name': 'seo_content_agent', 'depends_on': ['content_strategy_agent']},
+            {'name': 'wordpress_publish_mcp', 'depends_on': ['seo_content_agent']},
+        ],
+    },
 }
