@@ -7,6 +7,8 @@
 - Strict layered architecture: Agents -> Orchestrator -> MCP Service/Registry -> Integrations.
 - Strict Pydantic validation (`strict=True`, `extra=forbid`) for workflow and agent contracts.
 - Full observability via event emission: workflow lifecycle, step lifecycle, agent execution, MCP calls.
+- MVP workflow path implemented:
+  - `keyword_agent` -> `content_strategy_agent` -> `seo_content_agent` -> `wordpress_publish_mcp`
 - FastAPI endpoints:
   - `POST /workflow/run`
   - `GET /workflow/{id}`
